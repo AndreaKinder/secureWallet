@@ -74,10 +74,23 @@ def verify_user_status(request: VerifyUserStatusRequest):
         "location_verification": True
     }
 
+class Location:
+    lat: float
+    lon: float
+    timestamp: str
+
+    def dict(self):
+        return {
+            "lat": self.lat,
+            "lon": self.lon,
+            "timestamp": self.timestamp
+        }
+
 
 class LoginRequest(BaseModel):
     username: str
     password: str
+    location: Location
 
 class LoginResponse(BaseModel):
     success: bool
@@ -104,7 +117,22 @@ def login(request: LoginRequest):
         )
         user_phone = None
         print(response.user)
-         # Get user's phone number from Supabase user metadata
+
+        # Update user's location in Supabase user metadata
+        if response.user:
+            user_metadata = response.user.user_metadata or {}
+            locations = user_metadata.get("locations", [])
+            locations.append(request.location.dict())
+            supabase.auth.update_user(
+                {
+                    "id": response.user.id,
+                    "user_metadata": {
+                        "locations": locations
+                    }
+                }
+            )
+
+
         if response.user and response.user.phone:
             user_phone = response.user.phone
         return {
@@ -124,8 +152,6 @@ def verify_device_location(device: str):
         phone_number=device
     )
     return my_device.verify_location(latitude=41.390205, longitude=2.154007, radius=5000)
-
-
 
 if __name__ == "__main__":
     import uvicorn
