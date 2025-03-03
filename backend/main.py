@@ -77,24 +77,13 @@ def verify_user_status(request: VerifyUserStatusRequest):
         "location_verification": True
     }
 
-class Location:
-    lat: float
-    lon: float
-    timestamp: str
 
-    def dict(self):
-        return {
-            "lat": self.lat,
-            "lon": self.lon,
-            "timestamp": self.timestamp
-        }
 
 
 class LoginRequest(BaseModel):
     username: str
     password: str
-    location: Location
-
+    
 class LoginResponse(BaseModel):
     success: bool
     swap_recent: bool | None = None
