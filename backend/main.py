@@ -5,6 +5,8 @@ import requests
 import network_as_code
 import os
 from dotenv import load_dotenv
+from supabase import create_client, Client
+
 
 app = FastAPI(
     title="SecureWallet API",
@@ -17,6 +19,10 @@ app = FastAPI(
 load_dotenv()
 client = network_as_code.NetworkAsCodeClient(token=os.getenv("NAC_API_TOKEN"))
 
+
+url: str = os.environ.get("SUPABASE_URL")
+key: str = os.environ.get("SUPABASE_KEY")
+supabase: Client = create_client(url, key)
 
 
 class SimSwapResponse(BaseModel):
@@ -74,7 +80,8 @@ class LoginRequest(BaseModel):
 
 class LoginResponse(BaseModel):
     success: bool
-    error: str
+    swap_recent: bool
+    error: str | None = None
 
 
 def is_swim_swap_recent(device: str):
@@ -87,7 +94,31 @@ def is_swim_swap_recent(device: str):
 
 @app.post("/login", response_model=LoginResponse)
 def login(request: LoginRequest):
-    return is_swim_swap_recent(request.username)
+
+    try:
+        response = supabase.auth.sign_in_with_password(
+        {
+            "email": request.username, 
+            "password": request.password,
+        }
+        )
+        user_phone = None
+        print(response.user)
+         # Get user's phone number from Supabase user metadata
+        if response.user and response.user.phone:
+            user_phone = response.user.phone
+        return {
+            "success": response.user is not None,
+            "swap_recent": is_swim_swap_recent(user_phone)
+        }
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e)
+        }
+   
+   
+
 
 if __name__ == "__main__":
     import uvicorn
