@@ -84,10 +84,13 @@ def is_swim_swap_recent(device: str):
     )
     return my_device.verify_sim_swap(max_age=900)
 
-
 @app.post("/login", response_model=LoginResponse)
 def login(request: LoginRequest):
-    return is_swim_swap_recent(request.username)
+    swim_swap = is_swim_swap_recent(request.username)
+    if swim_swap:
+        return LoginResponse(success=False, error="SIM Swap detected")
+    else:
+        return LoginResponse(success=True, error="")
 
 if __name__ == "__main__":
     import uvicorn
