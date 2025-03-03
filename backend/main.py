@@ -2,12 +2,19 @@ from typing import Union
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 import requests
+import network_as_code
+import os
+from dotenv import load_dotenv
+
 
 app = FastAPI(
     title="SecureWallet API",
     description="API for secure wallet verification services",
     version="1.0.0"
 )
+
+load_dotenv()
+client = network_as_code.NetworkAsCodeClient(token=os.getenv("NAC_API_TOKEN"))
 
 class SimSwapResponse(BaseModel):
     phoneNumber: str

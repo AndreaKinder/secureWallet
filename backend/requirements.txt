@@ -1,2 +1,4 @@
 fastapi
 uvicorn
+network_as_code
+python-dotenv
