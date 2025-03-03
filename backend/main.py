@@ -1,3 +1,4 @@
+from asyncio.log import logger
 from typing import Union
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
@@ -23,6 +24,8 @@ client = network_as_code.NetworkAsCodeClient(token=os.getenv("NAC_API_TOKEN"))
 url: str = os.environ.get("SUPABASE_URL")
 key: str = os.environ.get("SUPABASE_KEY")
 supabase: Client = create_client(url, key)
+
+
 
 
 class SimSwapResponse(BaseModel):
@@ -80,8 +83,11 @@ class LoginRequest(BaseModel):
 
 class LoginResponse(BaseModel):
     success: bool
-    swap_recent: bool
+    swap_recent: bool | None = None
     error: str | None = None
+    username: str | None = None
+    latitude: float | None = None
+    longitude: float | None = None
 
 
 def is_swim_swap_recent(device: str):
@@ -101,13 +107,25 @@ def login(request: LoginRequest):
             "password": request.password,
         }
         )
+        user = response.user
         user_phone = None
-        print(response.user)
          # Get user's phone number from Supabase user metadata
-        if response.user and response.user.phone:
-            user_phone = response.user.phone
+        if user:
+            user_phone = user.phone
+        print("user_phone: ", user_phone)
+        print("response: ", user.user_metadata)
+        # Get latitude and longitude from Supabase
+        response_location = get_user_location(request.username)
+        # Parse response
+        if response_location:
+            print(f"Longitude: {response_location['longitude']}, Latitude: {response_location['latitude']}")
+        else:
+            print(f"No location data found for the user with email: {request.username}")
         return {
-            "success": response.user is not None,
+            "success": True,
+            "username": user.user_metadata['display_name'],
+            "latitude": response_location['longitude'],
+            "longitude": response_location['latitude'],
             "swap_recent": is_swim_swap_recent(user_phone)
         }
     except Exception as e:
@@ -118,6 +136,21 @@ def login(request: LoginRequest):
    
    
 
+def get_user_location(email):
+    # Call the get_user_location function with the email parameter
+    response = supabase.rpc("get_user_location", {"email_input": email}).execute()
+    
+    if response.data:
+        # Extract longitude and latitude from the response
+        location = response.data[0]
+        print("location: ", location)
+        return {
+            "longitude": location["longitude"],
+            "latitude": location["latitude"]
+        }
+
+    else:
+        return None
 
 if __name__ == "__main__":
     import uvicorn
