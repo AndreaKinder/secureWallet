@@ -1,20 +1,45 @@
 from typing import Union
 from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
 import requests
 
-app = FastAPI()
+app = FastAPI(
+    title="SecureWallet API",
+    description="API for secure wallet verification services",
+    version="1.0.0"
+)
 
+class SimSwapResponse(BaseModel):
+    phoneNumber: str
+    lastSimChange: str
+    status: str
 
-@app.get("/")
+class LocationPoint(BaseModel):
+    latitude: float
+    longitude: float
+
+class LocationVerificationResponse(BaseModel):
+    verified: bool
+    accuracy: float
+    timestamp: str
+    location: LocationPoint
+
+class VerifyUserStatusResponse(BaseModel):
+    sim_swap: SimSwapResponse
+    location_verification: LocationVerificationResponse
+
+class VerifyUserStatusRequest(BaseModel):
+    phone_number: str
+
+@app.get("/", response_model=dict[str, str])
 def read_root():
     return {"Hello": "World"}
 
-
-@app.post("/verifyUserStatus")
-def verify_user_status(phone_number: str):
+@app.post("/verifyUserStatus", response_model=VerifyUserStatusResponse)
+def verify_user_status(request: VerifyUserStatusRequest):
     # SIM Swap API
     sim_swap_url = "https://sim-swap.p-eu.rapidapi.com/sim-swap/sim-swap/v0/retrieve-date"
-    sim_swap_payload = {"phoneNumber": phone_number}
+    sim_swap_payload = {"phoneNumber": request.phone_number}
     sim_swap_headers = {
         "x-rapidapi-key": "9aa0d99e05mshc02abfd119c26e5p12e750jsn383bfb5df36c",
         "x-rapidapi-host": "sim-swap.nokia.rapidapi.com",
@@ -27,7 +52,7 @@ def verify_user_status(phone_number: str):
     # Location Verification API
     location_verification_url = "https://location-verification.p-eu.rapidapi.com/verify"
     location_verification_payload = {
-        "device": {"phoneNumber": phone_number},
+        "device": {"phoneNumber": request.phone_number},
         "area": {
             "areaType": "CIRCLE",
             "center": {
