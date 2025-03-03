@@ -1,6 +1,6 @@
 fastapi
 uvicorn
 gunicorn
-
 network_as_code
 python-dotenv
+requests
