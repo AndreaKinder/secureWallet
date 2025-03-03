@@ -6,19 +6,18 @@ import network_as_code
 import os
 from dotenv import load_dotenv
 
-class SimSwapResponse(BaseModel):
-    phoneNumber: str
-    lastSimChange: str
-    status: str
-
 app = FastAPI(
     title="SecureWallet API",
     description="API for secure wallet verification services",
-    version="1.0.0"
+    version="1.0.0",
+    docs_url="/docs",
+    redoc_url="/redoc"
 )
 
 load_dotenv()
 client = network_as_code.NetworkAsCodeClient(token=os.getenv("NAC_API_TOKEN"))
+
+
 
 class SimSwapResponse(BaseModel):
     phoneNumber: str
@@ -48,42 +47,48 @@ def read_root():
 
 @app.post("/verifyUserStatus", response_model=VerifyUserStatusResponse)
 def verify_user_status(request: VerifyUserStatusRequest):
-    # SIM Swap API
-    sim_swap_url = "https://sim-swap.p-eu.rapidapi.com/sim-swap/sim-swap/v0/retrieve-date"
-    sim_swap_payload = {"phoneNumber": request.phone_number}
-    sim_swap_headers = {
-        "x-rapidapi-key": "9aa0d99e05mshc02abfd119c26e5p12e750jsn383bfb5df36c",
-        "x-rapidapi-host": "sim-swap.nokia.rapidapi.com",
-        "Content-Type": "application/json"
-    }
+    # Then, create a device object for the phone number you want to check
+    my_device = client.devices.get(
+        # The phone number does not accept spaces or parentheses
+        phone_number=request.phone_number
+    )
 
-    sim_swap_response = requests.post(sim_swap_url, json=sim_swap_payload, headers=sim_swap_headers)
-    sim_swap_result = sim_swap_response.json()
+    # The date of the last SIM Swap can be retrieved like so:
+    # The output may be null, if no SIM Swap has occurred.
+    # Or it may also return the SIM activation date.
+    sim_swap_date = my_device.get_sim_swap_date()
 
-    # Location Verification API
-    location_verification_url = "https://location-verification.p-eu.rapidapi.com/verify"
-    location_verification_payload = {
-        "device": {"phoneNumber": request.phone_number},
-        "area": {
-            "areaType": "CIRCLE",
-            "center": {
-                "latitude": -90, # data from user 
-                "longitude": -180 # data from user
-            },
-            "radius": 3000 # Default radius if not provided
-        },
-        "maxAge": 3600 # Default max age if not provided
-    }
-    location_verification_headers = {
-        "x-rapidapi-key": "9aa0d99e05mshc02abfd119c26e5p12e750jsn383bfb5df36c",
-        "x-rapidapi-host": "location-verification.nokia.rapidapi.com",
-        "Content-Type": "application/json"
-    }
-
-    location_verification_response = requests.post(location_verification_url, json=location_verification_payload, headers=location_verification_headers)
-    location_verification_result = location_verification_response.json()
+    # You can also test if the SIM swap happened recently:
+    if my_device.verify_sim_swap(max_age=900):
+        print("A SIM swap occurred within the past fifteen minutes!")
 
     return {
-        "sim_swap": sim_swap_result,
-        "location_verification": location_verification_result
+        "sim_swap": sim_swap_date,
+        "location_verification": True
     }
+
+
+class LoginRequest(BaseModel):
+    username: str
+    password: str
+
+class LoginResponse(BaseModel):
+    success: bool
+    error: str
+
+
+def is_swim_swap_recent(device: str):
+    my_device = client.devices.get(
+        # The phone number does not accept spaces or parentheses
+        phone_number=device
+    )
+    return my_device.verify_sim_swap(max_age=900)
+
+
+@app.post("/login", response_model=LoginResponse)
+def login(request: LoginRequest):
+    return is_swim_swap_recent(request.username)
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
