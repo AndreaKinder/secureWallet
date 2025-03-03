@@ -91,7 +91,6 @@ def is_swim_swap_recent(device: str):
     )
     return my_device.verify_sim_swap(max_age=900)
 
-
 @app.post("/login", response_model=LoginResponse)
 def login(request: LoginRequest):
 
