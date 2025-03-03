@@ -1,5 +1,6 @@
 from typing import Union
 from fastapi import FastAPI, HTTPException
+from network_as_code.models import DeviceIpv4Addr
 from pydantic import BaseModel
 import requests
 import network_as_code
@@ -117,6 +118,13 @@ def login(request: LoginRequest):
         }
    
    
+
+def verify_device_location(device: str):
+    my_device = client.devices.get(
+        phone_number=device
+    )
+    return my_device.verify_location(latitude=41.390205, longitude=2.154007, radius=5000)
+
 
 
 if __name__ == "__main__":
