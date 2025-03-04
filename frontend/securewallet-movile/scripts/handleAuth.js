@@ -1,4 +1,5 @@
 import axios from "axios";
+import cors from "cors";
 
 const corsOptions = {
   origin: "*",
@@ -7,16 +8,19 @@ const corsOptions = {
 };
 
 axios.defaults.baseURL = "https://dry-dusk-82752-48663a91dffc.herokuapp.com";
-axios.defaults.headers.common["Access-Control-Allow-Origin"] = corsOptions.origin;
 
 async function handleLogin(username, password) {
   try {
-    const response = await axios.post("/login", { username: username, password: password }, {
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-      },
-    });
+    const response = await axios.post(
+      "/login",
+      { username: username, password: password },
+      {
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+      }
+    );
     console.log("Respuesta del servidor:", response.status, response.data);
     return response;
   } catch (error) {
