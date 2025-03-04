@@ -4,7 +4,7 @@ async function handleLogin(username, password) {
   try {
     const response = await axios.post(
       "https://dry-dusk-82752-48663a91dffc.herokuapp.com/login",
-      { username, password },
+      { username: username, password: password },
       {
         headers: {
           Accept: "application/json",
