@@ -57,7 +57,7 @@ const LoginScreen = ({onLoginSuccessProp}) => {
 
   return(
     <View style={styles.container}>
-      <Text style={styles.title}>Iniciar sesi n</Text>
+      <Text style={styles.title}>Iniciar sesion</Text>
       <TextInput
         placeholder="Usuario"
         style={styles.input}
