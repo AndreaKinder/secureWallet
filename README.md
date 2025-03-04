@@ -6,7 +6,6 @@ authenticity when logging into the application or performing sensitive transacti
 
 ## Demo
 See the demo [here](https://docs.google.com/file/d/1pJ3DqREyHj-W8ym_cW0pGrvN1ZGIAyIt/preview)
-![Demo](/assets/secure%20wallet.mp4)
 
 ## Presentation
 See the presentation on `presentation.pdf`
