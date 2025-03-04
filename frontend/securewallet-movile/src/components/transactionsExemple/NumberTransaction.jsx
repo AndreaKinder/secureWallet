@@ -1,6 +1,10 @@
+import { Text, StyleSheet } from "react-native";
+
 function NumberTransaction({ transaction, number }) {
   return (
-    <div style={{ display: "flex", alignItems: "center" }}><p style={{ marginRight: "1em" }}>{transaction}</p><p>{number}</p></div>
+    <Text style={{ fontSize: 16 }}>
+      {transaction} {number.toFixed(2)} 
+    </Text>
   );
 }
 
