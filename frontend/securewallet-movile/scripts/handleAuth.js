@@ -35,5 +35,11 @@ async function handleLogin(username, password) {
   }
 }
 
-export { handleLogin };
+function exportUsername(username) {
+  // This function can be used to export the username
+  return username;
+}
+
+
+export { handleLogin, exportUsername };
 
